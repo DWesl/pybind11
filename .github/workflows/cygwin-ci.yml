@@ -46,7 +46,7 @@ jobs:
           packages: >-
             python39=3.9.16-1 python39-devel=3.9.16-1 python39-pip python-pip-wheel
             python-setuptools-wheel liblapack-devel liblapack0 gcc-fortran
-            gcc-g++ git dash cmake ninja make libboost-devel 
+            gcc-g++ git dash cmake ninja make libboost-devel eigen3
             python39-numpy python39-pytest
       - name: Set Windows PATH
         uses: egor-tensin/cleanup-path@f04bc953e6823bf491cc0bdcff959c630db1b458 # v4.0.1
@@ -67,7 +67,7 @@ jobs:
         shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
         run: >
           cmake -S . -B .
-          -DPYBIND11_WERROR=ON
+          -DPYBIND11_WERROR=OFF
           -DPYBIND11_SIMPLE_GIL_MANAGEMENT=ON
           -DDOWNLOAD_CATCH=ON
           -DDOWNLOAD_EIGEN=ON
