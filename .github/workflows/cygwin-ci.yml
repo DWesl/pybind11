@@ -58,7 +58,7 @@ jobs:
       - name: Tell Cygwin's git about this repository.
         run: |
           dash -c "which git; /usr/bin/git config --system --add safe.directory /cygdrive/d/a/pybind11/pybind11"
-          dash -c "/usr/bin/git config --system --add safe.directory `pwd`"
+          bash -c "/usr/bin/git config --system --add safe.directory $(pwd)"
 
       # First build - C++11 mode and inplace
       # More-or-less randomly adding -DPYBIND11_SIMPLE_GIL_MANAGEMENT=ON here.
