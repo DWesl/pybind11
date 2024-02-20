@@ -24,6 +24,7 @@ env:
   PYTEST_TIMEOUT: 300
   # For cmake:
   VERBOSE: 1
+  # For Cygwin
   CYGWIN_NOWINPATH: 1
   SHELLOPTS: igncr
   CHERE_INVOKING: 1
@@ -45,7 +46,7 @@ jobs:
           packages: >-
             python39=3.9.16-1 python39-devel=3.9.16-1 python39-pip python-pip-wheel
             python-setuptools-wheel liblapack-devel liblapack0 gcc-fortran
-            gcc-g++ git dash cmake ninja libboost-devel 
+            gcc-g++ git dash cmake ninja make libboost-devel 
             python39-numpy python39-pytest
       - name: Set Windows PATH
         uses: egor-tensin/cleanup-path@f04bc953e6823bf491cc0bdcff959c630db1b458 # v4.0.1
