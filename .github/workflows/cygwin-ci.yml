@@ -1,0 +1,96 @@
+# To enable this workflow on a fork, comment out:
+#
+# if: github.repository == 'numpy/numpy'
+name: Test on Cygwin
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+      - stable
+      - v*
+
+permissions: read-all
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_BREAK_SYSTEM_PACKAGES: 1
+  PIP_ONLY_BINARY: numpy
+  FORCE_COLOR: 3
+  PYTEST_TIMEOUT: 300
+  # For cmake:
+  VERBOSE: 1
+  CYGWIN_NOWINPATH: 1
+  SHELLOPTS: igncr
+  CHERE_INVOKING: 1
+
+jobs:
+  cygwin_build_test:
+    runs-on: windows-latest
+    if: "github.repository == 'numpy/numpy'"
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Cygwin
+        uses: egor-tensin/setup-cygwin@d2c752bab416d4b0662591bd366fc2686297c82d   #v4
+        with:
+          platform: x86_64
+          install-dir: 'C:\tools\cygwin'
+          packages: >-
+            python39=3.9.16-1 python39-devel=3.9.16-1 python39-pip python-pip-wheel
+            python-setuptools-wheel liblapack-devel liblapack0 gcc-fortran
+            gcc-g++ git dash cmake ninja libboost-devel 
+            python39-numpy python39-pytest
+      - name: Set Windows PATH
+        uses: egor-tensin/cleanup-path@f04bc953e6823bf491cc0bdcff959c630db1b458 # v4.0.1
+        with:
+          dirs: 'C:\tools\cygwin\bin;C:\tools\cygwin\lib\lapack'
+      - name: Verify that bash is Cygwin bash
+        run: |
+          command bash
+          bash -c "uname -svrmo"
+      - name: Tell Cygwin's git about this repository.
+        run: |
+          dash -c "which git; /usr/bin/git config --system --add safe.directory /cygdrive/d/a/pybind11/pybind11"
+          dash -c "/usr/bin/git config --system --add safe.directory `pwd`"
+
+      # First build - C++11 mode and inplace
+      # More-or-less randomly adding -DPYBIND11_SIMPLE_GIL_MANAGEMENT=ON here.
+      - name: Configure C++11
+        shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
+        run: >
+          cmake -S . -B .
+          -DPYBIND11_WERROR=ON
+          -DPYBIND11_SIMPLE_GIL_MANAGEMENT=ON
+          -DDOWNLOAD_CATCH=ON
+          -DDOWNLOAD_EIGEN=ON
+          -DCMAKE_CXX_STANDARD=11
+          ${{ matrix.args }}
+
+      - name: Build C++11
+        shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
+        run: cmake --build . -j 2
+
+      - name: Python tests C++11
+        shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
+        run: cmake --build . --target pytest -j 2
+
+      - name: C++11 tests
+        # TODO: Figure out how to load the DLL on Python 3.8+
+        if: "!(runner.os == 'Windows' && (matrix.python == 3.8 || matrix.python == 3.9 || matrix.python == '3.10' || matrix.python == '3.11' || matrix.python == 'pypy-3.8'))"
+        shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
+        run: cmake --build .  --target cpptest -j 2
+
+      - name: Interface test C++11
+        shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
+        run: cmake --build . --target test_cmake_build
+
+      - name: Clean directory
+        shell: "C:/tools/Cygwin/bin/bash.exe -o igncr -eo pipefail {0}"
+        run: git clean -fdx
