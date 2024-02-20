@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "pyconfig.h"
 #include "detail/class.h"
 #include "detail/init.h"
 #include "attr.h"
